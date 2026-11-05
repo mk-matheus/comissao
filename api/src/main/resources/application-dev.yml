@@ -1,0 +1,9 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/comissao
+    username: comissao
+    password: comissao
+
+app:
+  jwt-secret: dev-only-secret-change-me-at-least-32-bytes-long
+  code-pepper: dev-only-pepper
