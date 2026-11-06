@@ -1,0 +1,13 @@
+spring:
+  datasource:
+    # valores ignorados: o Testcontainers (@ServiceConnection) sobrescreve a conexão
+    url: jdbc:postgresql://localhost:5432/ignorado
+    username: ignorado
+    password: ignorado
+
+app:
+  jwt-secret: test-secret-with-at-least-32-bytes-0123456789
+  code-pepper: test-pepper
+  timezone: America/Recife
+  base-url: http://localhost:3000
+  cors-origins: http://localhost:3000

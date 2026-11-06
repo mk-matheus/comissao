@@ -3,6 +3,8 @@ package com.mkmateus.api.common.security;
 import com.mkmateus.api.common.config.AppProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.Profiles;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -15,6 +17,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import javax.crypto.spec.SecretKeySpec;
 import java.util.List;
 
 @Configuration
@@ -23,23 +26,36 @@ public class SecurityConfig {
 
     @Bean
     SecurityFilterChain filterChain(HttpSecurity http,
-                                    ProblemDetailSecurityHandlers handlers) throws Exception {
-        return http
+                                    ProblemDetailSecurityHandlers handlers,
+                                    Environment environment) throws Exception {
+        var authorize = http
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(Customizer.withDefaults())
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(a -> a
+                .authorizeHttpRequests(a -> {
+                    a
                         .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
                         .requestMatchers("/api/v1/auth/**").permitAll()
-                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-                        .anyRequest().authenticated())
+                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html")
+                        .access((authentication, context) -> new org.springframework.security.authorization.AuthorizationDecision(
+                                environment.acceptsProfiles(Profiles.of("dev"))));
+                    a.anyRequest().authenticated();
+                })
                 .exceptionHandling(e -> e
                         .authenticationEntryPoint(handlers)
                         .accessDeniedHandler(handlers))
                 .headers(h -> h
                         .frameOptions(HeadersConfigurer.FrameOptionsConfig::deny)
                         .referrerPolicy(r -> r.policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.NO_REFERRER)))
+                .oauth2ResourceServer(oauth -> oauth.jwt(Customizer.withDefaults()))
                 .build();
+        return authorize;
+    }
+
+    @Bean
+    org.springframework.security.oauth2.jwt.JwtDecoder jwtDecoder(AppProperties props) {
+        var key = new SecretKeySpec(props.jwtSecret().getBytes(java.nio.charset.StandardCharsets.UTF_8), "HmacSHA256");
+        return org.springframework.security.oauth2.jwt.NimbusJwtDecoder.withSecretKey(key).build();
     }
 
     @Bean

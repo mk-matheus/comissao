@@ -8,6 +8,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import java.util.List;
@@ -47,8 +48,18 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return validacao(fields);
     }
 
-    @ExceptionHandler(Exception.class)
-    ProblemDetail handleGeneric(Exception ex) {
+    @Override
+    protected ResponseEntity<Object> handleNoResourceFoundException(
+            NoResourceFoundException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+        ProblemDetail pd = ProblemDetail.forStatusAndDetail(
+                ErrorCode.RECURSO_NAO_ENCONTRADO.status(), ErrorCode.RECURSO_NAO_ENCONTRADO.titulo());
+        pd.setTitle(ErrorCode.RECURSO_NAO_ENCONTRADO.titulo());
+        pd.setProperty("code", ErrorCode.RECURSO_NAO_ENCONTRADO.name());
+        return handleExceptionInternal(ex, pd, headers, ErrorCode.RECURSO_NAO_ENCONTRADO.status(), request);
+    }
+
+    @ExceptionHandler(RuntimeException.class)
+    ProblemDetail handleGeneric(RuntimeException ex) {
         log.error("Erro não tratado", ex);
         ProblemDetail pd = ProblemDetail.forStatusAndDetail(
                 ErrorCode.ERRO_INTERNO.status(), ErrorCode.ERRO_INTERNO.titulo());

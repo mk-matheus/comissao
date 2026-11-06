@@ -7,3 +7,7 @@ spring:
 app:
   jwt-secret: dev-only-secret-change-me-at-least-32-bytes-long
   code-pepper: dev-only-pepper
+
+logging:
+  pattern:
+    level: "%5p [%X{requestId:-}]"
