@@ -9,7 +9,14 @@ A implementação segue **fatias verticais** (cada fatia entrega back-end e fron
 - **B0 — Fundação: concluída em 06/11/2026.** Ambiente Docker, perfis, Flyway,
   segurança stateless, `ProblemDetail`, OpenAPI, CI, JaCoCo e testes de contrato
   foram implementados e validados com `mvnw test` e `mvnw verify`.
-- **Próxima fase:** B1 — Modelo de dados.
+- **B1 — Modelo de dados: concluída em 06/11/2026.** Migrations Flyway (`V1` a `V6`)
+  com extensão `btree_gist`, restrição `EXCLUDE` de ciclos, chaves estrangeiras
+  compostas `(usuario_id, x_id)`, `CHECK`s, índices, `BaseEntity` com Spring Data
+  Auditing, entidades JPA (`@Version`, `LAZY`, enums `STRING`), repositórios com
+  isolamento explícito (`RecursoUsuarioRepository`) e suíte de integração
+  `ModeloDadosIntegrationTest` validados com `mvnw test jacoco:report spotless:check`
+  (13 testes passando, 0 falhas).
+- **Próxima fase:** B2 — Autenticação básica.
 
 ## 1. Princípios e organização
 
@@ -171,6 +178,8 @@ validado por testes de integração.
 
 - Esquema completo criado por migrations, sem `ddl-auto` gerando nada.
 - Toda regra de integridade da lista de testes falha no banco, mesmo sem passar pela aplicação.
+
+**Status:** concluída. As 6 migrations (`V1` a `V6`) aplicaram do zero no PostgreSQL 16 (Testcontainers e banco local `comissao`) com validação completa do Hibernate (`ddl-auto=validate`). Todas as restrições de banco (`CHECK`, `UNIQUE`, `EXCLUDE USING gist` em ciclos e chaves estrangeiras compostas entre usuários), auditoria JPA, `@Version`, carregamento `LAZY` e ausência de `findById` puro nos repositórios de recursos de usuário foram validados em `ModeloDadosIntegrationTest` (`./mvnw test jacoco:report spotless:check` verde, 13 testes executados, 0 falhas).
 
 #### B2 — Autenticação básica
 

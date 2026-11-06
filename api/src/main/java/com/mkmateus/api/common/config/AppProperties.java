@@ -18,4 +18,3 @@ public record AppProperties(
         @NotBlank String codePepper,
         String googleClientId) {
 }
-
